@@ -15,6 +15,7 @@ import geopandas as gpd
 import time
 import nltk
 nltk.download('punkt_tab')
+nltk.download('stopwords')
 # ----------------------------- Streamlit Setup -----------------------------
 st.set_page_config(
     page_title="Product Reviews",
