@@ -1,0 +1,10 @@
+streamlit
+pandas
+nltk
+joblib
+psycopg2-binary
+altair
+plotly
+matplotlib
+geopandas
+streamlit-option-menu
