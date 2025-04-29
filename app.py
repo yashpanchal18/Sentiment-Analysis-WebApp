@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import geopandas as gpd
 import time
-
+import nltk
+nltk.download('punkt_tab')
 # ----------------------------- Streamlit Setup -----------------------------
 st.set_page_config(
     page_title="Product Reviews",
