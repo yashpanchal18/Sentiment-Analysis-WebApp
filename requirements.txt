@@ -8,3 +8,4 @@ plotly
 matplotlib
 geopandas
 streamlit-option-menu
+scikit-learn
