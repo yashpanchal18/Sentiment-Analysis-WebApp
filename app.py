@@ -29,7 +29,7 @@ alt.themes.enable("dark")
 col = st.columns((1.5, 4.5, 2), gap='medium')
 
 # ----------------------------- Load Model -----------------------------
-loaded_model = joblib.load('model/LOR_2_.pkl')
+loaded_model = joblib.load('model/rf_model.pkl')
 
 # ----------------------------- PostgreSQL Connection -----------------------------
 def create_connection():
