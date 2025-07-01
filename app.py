@@ -14,6 +14,10 @@ import plotly.express as px
 import geopandas as gpd
 import time
 import nltk
+from tensorflow.keras.models import load_model
+from preprocess import review_to_token_vectors
+from hybrid import combine_explanations, shap_explain, lime_explain
+import numpy as np
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -29,7 +33,9 @@ alt.themes.enable("dark")
 col = st.columns((1.5, 4.5, 2), gap='medium')
 
 # ----------------------------- Load Model -----------------------------
-loaded_model = joblib.load('model/LOR_2_.pkl')
+# Load attention model + encoder
+model = load_model("models/lstm_attention_model.h5")
+label_encoder = joblib.load("models/lstm_attention_label_encoder.pkl")
 
 # ----------------------------- PostgreSQL Connection -----------------------------
 def create_connection():
@@ -88,6 +94,11 @@ def fetch_reviews():
     return df
 
 # ----------------------------- Cleaning and Prediction -----------------------------
+def get_confidence(text):
+    vec = review_to_token_vectors(clean_text(text), max_len=30)
+    pred = model.predict(np.array([vec]), verbose=0)[0]
+    return max(pred)
+
 def clean_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)
     text = text.lower()
@@ -97,10 +108,13 @@ def clean_text(text):
     return ' '.join(tokens)
 
 def predict_sentiment(text):
-    cleaned_text = clean_text(text)
-    prediction = loaded_model.predict([cleaned_text])
-    sentiment_dict = {-1: 'Negative', 0: 'Neutral', 1: 'Positive'}
-    return sentiment_dict[prediction[0]]
+    cleaned = clean_text(text)
+    vec = review_to_token_vectors(cleaned, max_len=30)
+    prediction = model.predict(np.array([vec]), verbose=0)[0]
+    label = np.argmax(prediction)
+    sentiment_dict = {0: 'Negative', 1: 'Neutral', 2: 'Positive'}
+    return sentiment_dict[label]
+
 
 # ----------------------------- Sidebar Menu -----------------------------
 with st.sidebar:
@@ -126,11 +140,29 @@ if selected == "Add Review":
         if review:
             click = st.button('Submit')
             if click:
+                cleaned = clean_text(review)
+                confidence = get_confidence(review)
+
+                lime_scores = lime_explain(review, top_k=10)
+                shap_scores = shap_explain(review, top_k=10)
+                hybrid_scores = combine_explanations(lime_scores, shap_scores, strategy="auto", model_confidence=confidence)
+
                 predicted_sentiment = predict_sentiment(review)
+                insert_review(cust_id, country, select, review, predicted_sentiment)
+
+                st.success('Your review was successfully recorded!')
                 st.write("Predicted Sentiment:", predicted_sentiment)
 
-                insert_review(cust_id, country, select, review, predicted_sentiment)
-                st.success('Your review was successfully recorded!')
+                # Highlight important tokens
+                tokens = review.split()
+                important_tokens = {tok.lower(): val for tok, val in hybrid_scores.items() if abs(val) >= 0.01}
+
+                highlighted = " ".join(
+                [f"**:blue[{t}]**" if t.lower() in important_tokens else t for t in tokens]
+                )
+                st.markdown("### 🔍 Key Influential Words in Review:")
+                st.markdown(highlighted)
+
 
 # ----------------------------- Dashboard Section -----------------------------
 if selected == "Dashboard":

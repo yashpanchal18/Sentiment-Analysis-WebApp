@@ -7,5 +7,6 @@ altair
 plotly
 matplotlib
 geopandas
-streamlit-option-menu
-scikit-learn
+sklearn
+tensorflow
+numpy
