@@ -34,8 +34,8 @@ col = st.columns((1.5, 4.5, 2), gap='medium')
 
 # ----------------------------- Load Model -----------------------------
 # Load attention model + encoder
-model = load_model("models/lstm_attention_model.h5")
-label_encoder = joblib.load("models/lstm_attention_label_encoder.pkl")
+model = load_model("model/lstm_attention_model.h5")
+label_encoder = joblib.load("model/lstm_attention_label_encoder.pkl")
 
 # ----------------------------- PostgreSQL Connection -----------------------------
 def create_connection():
